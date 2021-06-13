@@ -8,6 +8,7 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 import os
 
+
 class LinuxRouter( Node ):
 	"""A Node with IP forwarding enabled.
 	Means that every packet that is in this node, comunicate freely with its interfaces."""
@@ -163,12 +164,14 @@ def runTopo():
     
     # info('\n',net.ping(),'\n')
     # TRACE ROUTE dari hA ke hB
+    info( '\n*** TRACE ROUTE :\n' )
     hA.cmdPrint('traceroute 172.16.2.2')
     hA.cmdPrint('traceroute 172.16.3.2')
     
     #Traceroute dari hB ke HA
     hB.cmdPrint('traceroute 172.16.0.2')
     hB.cmdPrint('traceroute 172.16.1.2')
+    
     CLI(net)
     net.stop()
     
