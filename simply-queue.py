@@ -48,17 +48,23 @@ class NetworkTopo( Topo ):
         r3 = self.addNode('r3', cls=LinuxRouter, ip='172.16.0.0/24')
         r4 = self.addNode('r4', cls=LinuxRouter, ip='172.16.0.0/24')
         
+        
+        #assignment max queue size jadi 20
+        linkopts0 = dict(bw=0.5, delay='20ms', loss=0, max_queue_size = 20, use_tbf=True)
+        linkopts1 = dict(bw=1, delay='20ms', loss=0, max_queue_size = 20, use_tbf=True)
+        
         #add link setiap route dan host
-        self.addLink(hA,r1, cls=TCLink, intfName1='hA-eth0', intfName2='r1-eth0', bw=1)
-        self.addLink(hA,r2, cls=TCLink, intfName1='hA-eth1', intfName2='r2-eth0', bw=1)
-        self.addLink(hB,r3, cls=TCLink, intfName1='hB-eth0', intfName2='r3-eth0', bw=1)
-        self.addLink(hB,r4, cls=TCLink, intfName1='hB-eth1', intfName2='r4-eth0', bw=1)
+        self.addLink(hA,r1, cls=TCLink, intfName1='hA-eth0', intfName2='r1-eth0', **linkopts1)
+        self.addLink(hA,r2, cls=TCLink, intfName1='hA-eth1', intfName2='r2-eth0', **linkopts1)
+        self.addLink(hB,r3, cls=TCLink, intfName1='hB-eth0', intfName2='r3-eth0', **linkopts1)
+        self.addLink(hB,r4, cls=TCLink, intfName1='hB-eth1', intfName2='r4-eth0', **linkopts1)
+        
         
         #add link antar route
-        self.addLink(r1,r3, cls=TCLink, intfName1='r1-se3', intfName2='r3-se3', bw=0.5)
-        self.addLink(r1,r4, cls=TCLink, intfName1='r1-se2', intfName2='r4-se2', bw=1)
-        self.addLink(r2,r3, cls=TCLink, intfName1='r2-se2', intfName2='r3-se2', bw=1)
-        self.addLink(r2,r4, cls=TCLink, intfName1='r2-se3', intfName2='r4-se3', bw=0.5)
+        self.addLink(r1,r3, cls=TCLink, intfName1='r1-se3', intfName2='r3-se3', **linkopts0)
+        self.addLink(r1,r4, cls=TCLink, intfName1='r1-se2', intfName2='r4-se2', **linkopts1)
+        self.addLink(r2,r3, cls=TCLink, intfName1='r2-se2', intfName2='r3-se2', **linkopts1)
+        self.addLink(r2,r4, cls=TCLink, intfName1='r2-se3', intfName2='r4-se3', **linkopts0)
        
 	  
 
@@ -176,7 +182,7 @@ def runTopo():
     hB.cmdPrint('traceroute 172.16.1.2')
     
     info("""\n==================================================
-                              No Queue
+                              Queue
             =======================================================\n""")
     
     time.sleep(2)
@@ -184,70 +190,70 @@ def runTopo():
     hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
     
     time.sleep(1)
-    hA.cmdPrint('iperf3 -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/noQueue ')
+    hA.cmdPrint('iperf3 -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/MAX_QUEUE_20 ')
     
     
-    info( """\n===========================================
-                    Queue Discipline Setting
-            ================================================:\n""" )
+    # info( """\n===========================================
+    #                 Queue Discipline Setting
+    #         ================================================:\n""" )
     
-    r1.cmdPrint('tc qdisc del dev r1-eth0 root')
-    r1.cmdPrint('tc qdisc add dev r1-eth0 root netem ')
-    r2.cmdPrint('tc qdisc del dev r2-eth0 root')
-    r2.cmdPrint('tc qdisc add dev r2-eth0 root netem ')
-    r3.cmdPrint('tc qdisc del dev r3-eth0 root')
-    r3.cmdPrint('tc qdisc add dev r3-eth0 root netem ')
-    r4.cmdPrint('tc qdisc del dev r4-eth0 root')
-    r4.cmdPrint('tc qdisc add dev r4-eth0 root netem ')
-    # 20 ms di ganti jadi 40,60,80,100 nanti.
+    # r1.cmdPrint('tc qdisc del dev r1-eth0 root')
+    # r1.cmdPrint('tc qdisc add dev r1-eth0 root netem ')
+    # r2.cmdPrint('tc qdisc del dev r2-eth0 root')
+    # r2.cmdPrint('tc qdisc add dev r2-eth0 root netem ')
+    # r3.cmdPrint('tc qdisc del dev r3-eth0 root')
+    # r3.cmdPrint('tc qdisc add dev r3-eth0 root netem ')
+    # r4.cmdPrint('tc qdisc del dev r4-eth0 root')
+    # r4.cmdPrint('tc qdisc add dev r4-eth0 root netem ')
+    # # 20 ms di ganti jadi 40,60,80,100 nanti.
     
-    info("""\n =========================================
-                    QUEUE DENGAN BUFFER 20
-             ===========================================\n""")
+    # info("""\n =========================================
+    #                 QUEUE DENGAN BUFFER 20
+    #          ===========================================\n""")
     
-    time.sleep(2)
-    info('\n*** running iperf di server background :\n')
-    hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
+    # time.sleep(2)
+    # info('\n*** running iperf di server background :\n')
+    # hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
     
-    time.sleep(1)
-    hA.cmdPrint('iperf3 -w 20K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA20buffer ')
+    # time.sleep(1)
+    # hA.cmdPrint('iperf3 -w 20K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA20buffer ')
 
 
 
-    info("""\n =========================================
-                    QUEUE DENGAN BUFFER 40
-             ===========================================\n""")
+    # info("""\n =========================================
+    #                 QUEUE DENGAN BUFFER 40
+    #          ===========================================\n""")
     
-    time.sleep(2)
-    info('\n*** running iperf di server background :\n')
-    hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
+    # time.sleep(2)
+    # info('\n*** running iperf di server background :\n')
+    # hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
     
-    time.sleep(1)
-    hA.cmdPrint('iperf3 -w 40K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA40buffer ')
+    # time.sleep(1)
+    # hA.cmdPrint('iperf3 -w 40K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA40buffer ')
     
     
-    info("""\n =========================================
-                    QUEUE DENGAN BUFFER 60
-             ===========================================\n""")
+    # info("""\n =========================================
+    #                 QUEUE DENGAN BUFFER 60
+    #          ===========================================\n""")
     
-    time.sleep(2)
-    info('\n*** running iperf di server background :\n')
-    hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
+    # time.sleep(2)
+    # info('\n*** running iperf di server background :\n')
+    # hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
     
-    time.sleep(1)
-    hA.cmdPrint('iperf3 -w 60K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA60buffer ')
+    # time.sleep(1)
+    # hA.cmdPrint('iperf3 -w 60K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA60buffer ')
 
 
-    info("""\n =========================================
-                    QUEUE DENGAN BUFFER 100
-             ===========================================\n""")
+    # info("""\n =========================================
+    #                 QUEUE DENGAN BUFFER 100
+    #          ===========================================\n""")
     
-    time.sleep(2)
-    info('\n*** running iperf di server background :\n')
-    hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
+    # time.sleep(2)
+    # info('\n*** running iperf di server background :\n')
+    # hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
     
-    time.sleep(1)
-    hA.cmdPrint('iperf3 -w 100K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA100buffer ')
+    # time.sleep(1)
+    # hA.cmdPrint('iperf3 -w 100K -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/hA100buffer ')
 
     CLI(net)
     net.stop()
