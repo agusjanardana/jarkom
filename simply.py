@@ -7,7 +7,7 @@ from mininet.link import TCLink, Link
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 import os
-
+import time
 
 class LinuxRouter( Node ):
 	"""A Node with IP forwarding enabled.
@@ -164,13 +164,27 @@ def runTopo():
     
     # info('\n',net.ping(),'\n')
     # TRACE ROUTE dari hA ke hB
-    info( '\n*** TRACE ROUTE :\n' )
+    info( """\n =========================================
+                            TRACE ROUTE 
+                =========================================\n""" )
+    
     hA.cmdPrint('traceroute 172.16.2.2')
     hA.cmdPrint('traceroute 172.16.3.2')
     
     #Traceroute dari hB ke HA
     hB.cmdPrint('traceroute 172.16.0.2')
     hB.cmdPrint('traceroute 172.16.1.2')
+    
+    info("""\n==================================================
+                              non-queue
+            =======================================================\n""")
+    
+    time.sleep(2)
+    info('\n*** running iperf di server background :\n')
+    hB.cmdPrint('iperf3 -s -B 172.16.2.2  -i 1  &')
+    
+    time.sleep(1)
+    hA.cmdPrint('iperf3 -c 172.16.2.2 -i 1 -J > ./iperfPlotter/testTarball/noQueue ')
     
     CLI(net)
     net.stop()
