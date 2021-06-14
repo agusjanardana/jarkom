@@ -1,0 +1,10 @@
+untuk run jadi grapik
+python3 iperf3_plot.py -f ./testTarball -o graph/all.png 
+
+
+untuk run manual
+    xterm hA
+    hA ping hB 
+    tcpdump -w namafile.pcap -c 200 
+    iperf hA hB 
+    wireshark -r open file.pcap
